@@ -4,6 +4,13 @@ version = "0.1.0"
 edition = "2021"
 authors = ["boris.lok<boris.lok.tw@outlook.com>"]
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "devices"
+
 [dependencies]
 # Async runtime
 tokio = { version = "1.29.1", features = ["full"] }
@@ -16,10 +23,8 @@ argon2 = { version = "0.5.1", features = ["std"] }
 async-trait = "0.1.71"
 # Support database
 sqlx = { version = "0.7.1", features = [
-  "all-types",
   "macros",
   "migrate",
-  "offline",
   "postgres",
   "runtime-tokio-rustls",
 ] }
