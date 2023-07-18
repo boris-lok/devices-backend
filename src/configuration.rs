@@ -3,6 +3,9 @@ use sqlx::{
     ConnectOptions,
 };
 
+/// A data structure that contains other settings
+/// including `ApplicationSettings`, `DatabaseSettings`,
+/// and `JwtSettings`
 #[derive(Debug, serde::Deserialize)]
 pub struct Settings {
     pub application: ApplicationSettings,
@@ -10,12 +13,15 @@ pub struct Settings {
     pub jwt_secret: JwtSettings,
 }
 
+/// A data structure that contains host and port
+/// in which to indicate where you listen the TCP connection
 #[derive(Debug, serde::Deserialize)]
 pub struct ApplicationSettings {
     pub host: String,
     pub port: u16,
 }
 
+/// A data structure that contains every config from the database
 #[derive(Debug, serde::Deserialize)]
 pub struct DatabaseSettings {
     pub host: String,
@@ -27,6 +33,7 @@ pub struct DatabaseSettings {
 }
 
 impl DatabaseSettings {
+    /// Create a `PgConnectionOptions` without database
     pub fn without_db(&self) -> PgConnectOptions {
         let ssl_mode = if self.require_ssl {
             PgSslMode::Require
@@ -42,6 +49,7 @@ impl DatabaseSettings {
             .ssl_mode(ssl_mode)
     }
 
+    /// Create a `PgConnectionOptions` with database and tracing log
     pub fn with_db(&self) -> PgConnectOptions {
         self.without_db()
             .database(&self.database_name)
@@ -50,11 +58,13 @@ impl DatabaseSettings {
     }
 }
 
+/// A data structure contains the secret key
 #[derive(Debug, serde::Deserialize)]
 pub struct JwtSettings {
     pub secret_key: String,
 }
 
+/// An enum that indicate which environment we want to run
 pub enum Environment {
     Local,
     Production,
@@ -83,10 +93,10 @@ impl TryFrom<String> for Environment {
     }
 }
 
-// Get the configuration `Settings`. by parsing the `base.yaml`,
-// base on different environment `local` or `production` to get
-// the configuration file, and base the user config the environment
-// variable `APP__xxx`.
+/// Get the configuration `Settings`. by parsing the `base.yaml`,
+/// base on different environment `local` or `production` to get
+/// the configuration file, and base the user config the environment
+/// variable `APP__xxx`.
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     // Get the project cureent directory path.
     let base_path = std::env::current_dir().expect("Failed to determine the current directory");

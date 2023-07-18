@@ -15,17 +15,18 @@ use uuid::Uuid;
 
 use crate::configuration::{DatabaseSettings, Settings};
 
-// A data structure for app state
+/// A data structure for app state
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub db_pool: PgPool,
     pub jwt_secret_key: Secret<String>,
 }
 
-// A struct to create a uuid for every request
+/// A struct to create a uuid for every request
 #[derive(Debug, Clone)]
 struct MakeRequestUuid;
 
+/// Impl how to generate a request id
 impl MakeRequestId for MakeRequestUuid {
     fn make_request_id<B>(
         &mut self,
@@ -37,6 +38,7 @@ impl MakeRequestId for MakeRequestUuid {
     }
 }
 
+/// Start a server by givinng a `Settings` and a `TcpListener`
 pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()> {
     let state = AppState {
         db_pool: get_database_connection(&settings.database).await,
@@ -66,6 +68,7 @@ pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()>
         .await
 }
 
+/// Get a database connection by giving a `DatabaseSettings`
 pub async fn get_database_connection(config: &DatabaseSettings) -> PgPool {
     PgPoolOptions::new()
         .acquire_timeout(std::time::Duration::from_secs(2))
