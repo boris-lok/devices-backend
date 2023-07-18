@@ -11,6 +11,12 @@ pub struct PostgresUserRepository {
     session: PostgresSession,
 }
 
+impl PostgresUserRepository {
+    pub fn new(session: PostgresSession) -> Self {
+        Self { session }
+    }
+}
+
 #[async_trait::async_trait]
 impl IUserRespository for PostgresUserRepository {
     async fn get_store_credentials(

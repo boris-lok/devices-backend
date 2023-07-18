@@ -1,8 +1,9 @@
 use std::net::TcpListener;
+use std::sync::Arc;
 
-use axum::routing::get;
-use axum::Router;
-use secrecy::Secret;
+use axum::routing::{get, post};
+use axum::{Extension, Router};
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
@@ -15,13 +16,25 @@ use tracing::Level;
 use uuid::Uuid;
 
 use crate::configuration::{DatabaseSettings, Settings};
-use crate::routes::health_check;
+use crate::repositories::i_user_repository::IUserRespository;
+use crate::repositories::postgres_user_repository::PostgresUserRepository;
+use crate::routes::{health_check, login};
+use crate::utils::PostgresSession;
 
 /// A data structure for app state
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppState {
-    pub db_pool: PgPool,
-    pub jwt_secret_key: Secret<String>,
+    pub encoding_key: Arc<EncodingKey>,
+    pub decoding_key: Arc<DecodingKey>,
+}
+
+impl AppState {
+    pub fn new(secret: &[u8]) -> Self {
+        Self {
+            encoding_key: Arc::new(EncodingKey::from_secret(secret)),
+            decoding_key: Arc::new(DecodingKey::from_secret(secret)),
+        }
+    }
 }
 
 /// A struct to create a uuid for every request
@@ -42,13 +55,20 @@ impl MakeRequestId for MakeRequestUuid {
 
 /// Start a server by givinng a `Settings` and a `TcpListener`
 pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()> {
-    let state = AppState {
-        db_pool: get_database_connection(&settings.database).await,
-        jwt_secret_key: Secret::new(settings.jwt_secret.secret_key),
-    };
+    let state = AppState::new(settings.jwt_secret.secret_key.as_bytes());
+
+    let db_pool = get_database_connection(&settings.database).await;
+
+    let user_repository = PostgresSession::new(db_pool.clone())
+        .await
+        .map(PostgresUserRepository::new)
+        .map(Arc::new)
+        .expect("Failed to creaet a user repository")
+        as Arc<dyn IUserRespository + Send + Sync>;
 
     let app = Router::new()
         .route("/api/:version/health_check", get(health_check))
+        .route("/api/:version/login", post(login))
         .layer(
             ServiceBuilder::new()
                 .set_x_request_id(MakeRequestUuid)
@@ -62,6 +82,7 @@ pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()>
                         .on_response(DefaultOnResponse::new().include_headers(true)),
                 ),
         )
+        .layer(Extension(user_repository))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
