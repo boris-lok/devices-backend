@@ -1,5 +1,6 @@
 use std::net::TcpListener;
 
+use axum::routing::get;
 use axum::Router;
 use secrecy::Secret;
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -14,6 +15,7 @@ use tracing::Level;
 use uuid::Uuid;
 
 use crate::configuration::{DatabaseSettings, Settings};
+use crate::routes::health_check;
 
 /// A data structure for app state
 #[derive(Debug, Clone)]
@@ -46,6 +48,7 @@ pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()>
     };
 
     let app = Router::new()
+        .route("/api/v1/health_check", get(health_check))
         .layer(
             ServiceBuilder::new()
                 .set_x_request_id(MakeRequestUuid)
