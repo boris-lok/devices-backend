@@ -54,7 +54,6 @@ impl DatabaseSettings {
         self.without_db()
             .database(&self.database_name)
             .log_statements(tracing::log::LevelFilter::Trace)
-            
     }
 }
 
