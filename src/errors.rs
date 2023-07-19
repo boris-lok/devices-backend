@@ -37,7 +37,7 @@ impl IntoResponse for AppError {
             error_message,
         };
 
-        Json(resp).into_response()
+        (status, Json(resp)).into_response()
     }
 }
 
