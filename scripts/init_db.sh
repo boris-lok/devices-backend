@@ -30,7 +30,7 @@ fi
 # Check if a custom user has been set, otherwise default to 'postgres'
 DB_USER=${POSTGRES_USER:=postgres}
 # Check if a custom password has been set, otherwise default to 'yeework'
-DB_PASSWORD=${POSTGRES_PASSWORD=:=yeework}
+DB_PASSWORD=${POSTGRES_PASSWORD:=yeework}
 # Check if a custom database has been set, otherwise default to 'devices'
 DB_NAME=${POSTGRES_DB:=devices}
 # Check if a custom port has been set, otherwise default to '25432'
