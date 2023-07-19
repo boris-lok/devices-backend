@@ -16,6 +16,7 @@ use tracing::Level;
 use uuid::Uuid;
 
 use crate::configuration::{DatabaseSettings, Settings};
+use crate::middlewares::authentication_layer;
 use crate::repositories::i_user_repository::IUserRespository;
 use crate::repositories::postgres_user_repository::PostgresUserRepository;
 use crate::routes::{health_check, login};
@@ -66,9 +67,17 @@ pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()>
         .expect("Failed to creaet a user repository")
         as Arc<dyn IUserRespository + Send + Sync>;
 
+    let get_devices_routes =
+        Router::new()
+            .route("/", get(health_check))
+            .route_layer(axum::middleware::from_fn(|req, next| {
+                authentication_layer(Arc::new(vec![]), req, next)
+            }));
+
     let app = Router::new()
         .route("/api/:version/health_check", get(health_check))
         .route("/api/:version/login", post(login))
+        .nest("/api/:version", get_devices_routes)
         .layer(
             ServiceBuilder::new()
                 .set_x_request_id(MakeRequestUuid)
