@@ -435,6 +435,7 @@ dependencies = [
  "fake",
  "hyper",
  "jsonwebtoken",
+ "rand",
  "reqwest",
  "sea-query",
  "secrecy",
