@@ -28,6 +28,7 @@ impl IntoResponse for AppError {
             AppError::Auth(e) => match e {
                 AuthError::InvalidCredentials(e) => (StatusCode::UNAUTHORIZED, e.to_string()),
                 AuthError::ExpiredCredentials => (StatusCode::UNAUTHORIZED, e.to_string()),
+                AuthError::Forbidden => (StatusCode::FORBIDDEN, e.to_string()),
             },
             AppError::JsonError => (StatusCode::BAD_REQUEST, self.to_string()),
         };
@@ -47,4 +48,6 @@ pub enum AuthError {
     InvalidCredentials(#[source] anyhow::Error),
     #[error("expired credentials")]
     ExpiredCredentials,
+    #[error("permission is not enough")]
+    Forbidden,
 }

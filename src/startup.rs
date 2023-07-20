@@ -56,7 +56,8 @@ impl MakeRequestId for MakeRequestUuid {
 
 /// Start a server by givinng a `Settings` and a `TcpListener`
 pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()> {
-    let state = AppState::new(settings.jwt_secret.secret_key.as_bytes());
+    let secret = settings.jwt_secret.secret_key.as_bytes();
+    let state = AppState::new(secret);
 
     let db_pool = get_database_connection(&settings.database).await;
 
@@ -67,17 +68,19 @@ pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()>
         .expect("Failed to creaet a user repository")
         as Arc<dyn IUserRespository + Send + Sync>;
 
-    let get_devices_routes =
-        Router::new()
-            .route("/", get(health_check))
-            .route_layer(axum::middleware::from_fn(|req, next| {
-                authentication_layer(Arc::new(vec![]), req, next)
-            }));
+    let devices_routes = Router::new()
+        .route("/devices", get(crate::routes::get))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            |state, req, next| {
+                authentication_layer(state, req, next, Arc::new(vec![]))
+            },
+        ));
 
     let app = Router::new()
         .route("/api/:version/health_check", get(health_check))
         .route("/api/:version/login", post(login))
-        .nest("/api/:version", get_devices_routes)
+        .nest("/api/:version", devices_routes)
         .layer(
             ServiceBuilder::new()
                 .set_x_request_id(MakeRequestUuid)

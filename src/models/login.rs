@@ -15,3 +15,8 @@ pub struct Claims {
     pub exp: usize,
     pub permission: Vec<String>,
 }
+
+#[derive(Debug, Clone)]
+pub struct AuthenticatedUser {
+    pub user_id: String,
+}
