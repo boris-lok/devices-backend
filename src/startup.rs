@@ -17,6 +17,7 @@ use uuid::Uuid;
 
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::middlewares::authentication_layer;
+use crate::models::permission::Permission;
 use crate::repositories::i_user_repository::IUserRespository;
 use crate::repositories::postgres_user_repository::PostgresUserRepository;
 use crate::routes::{health_check, login};
@@ -73,7 +74,7 @@ pub async fn run(settings: Settings, listener: TcpListener) -> hyper::Result<()>
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             |state, req, next| {
-                authentication_layer(state, req, next, Arc::new(vec![]))
+                authentication_layer(state, req, next, Arc::new(Permission::Empty))
             },
         ));
 

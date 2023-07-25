@@ -32,7 +32,8 @@ pub mod v1 {
             sub: user_id,
             exp: exp.timestamp() as usize,
             // todo: add the user permissions
-            permission: vec![],
+            permissions: vec![],
+            roles: vec![],
         };
 
         let token = jsonwebtoken::encode(

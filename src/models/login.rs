@@ -13,7 +13,8 @@ pub struct LoginResponse {
 pub struct Claims {
     pub sub: String,
     pub exp: usize,
-    pub permission: Vec<String>,
+    pub permissions: Vec<String>,
+    pub roles: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
